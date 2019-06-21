@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Neverwinter Mount Insignia Bonuses</title>
+<style>
+body {font-family: sans-serif;}
+td {border: thin dotted black;}
+td.nowrap {white-space: nowrap;}
+td.legendary {border: medium ridge #f27900;}
+td.epic {border: medium ridge #7a38ff;}
+td.rare {border: medium ridge #3391e9;}
+td.uncommon {border: medium ridge #84dc26;}
+td.common {border: medium ridge #ffffff;}
+td.Universal {background-color: #fff345;}
+td.FIXME {background-color: #ff0000;}
+a {text-decoration: none;}
+a:hover {text-decoration: underline;}
+</style>
+</head>
+<body>
+<select id="select" onchange="update()"></select>
+<span id="slots"></span>
+<div id="description"></div>
+<br>
+<table id="table1">
+  <tr>
+    <th>Bonus</th>
+    <th>Insignia Required</th>
+    <th>Description</th>
+  </tr>
+</table>
+<table id="table2">
+  <tr>
+    <th>Mount</th>
+    <th>Slot 1</th>
+    <th>Slot 2</th>
+    <th id="slot3">Slot 3</th>
+    <th>Possible Bonuses</th>
+  </tr>
+</table>
+
+<script>
+var insignia = {
+    C: "Crescent",
+    R: "Regal",
+    B: "Barbed",
+    I: "Illuminated",
+    E: "Enlightened",
+    U: "Universal",
+    "?": "FIXME"
+};
+
+var bonuses = [
+    {itemName: "bonuses", slots: "", description: ""},
+    {itemName: "mounts", slots: "", description: ""},
+    {itemName: "Alchemist's Invigoration", slots: "RII", description: "Whenever you drink a Healing Potion, you are granted 2500 more defense for 10 seconds."},
+    {itemName: "Alchemist's Invigoration", slots: "RII", description: "Whenever you drink a Healing Potion, you are granted 2500 more defense for 10 seconds."},
+    {itemName: "Alchemist's Refresher", slots: "RI", description: "Whenever you drink a Healing Potion, you are granted 500 more Defense for 10 seconds."},
+    {itemName: "Artificer's Influence *pre m16 - needs review*", slots: "BI", description: "**pre M16** Whenever you use an Artifact power, your Recovery, Movement, Action Point Gain, and Stamina Gain are increased by 5% of your Power for 15 seconds."},
+    {itemName: "Artificer's Persuasion", slots: "BBI", description: "Whenever you use an Artifact power, your cooldowns are reduced by 2 seconds."},
+    {itemName: "Assassin's Covenant", slots: "REE", description: "You lose 1000 of your Defense, Deflection, Critical Avoidance and Awareness.  You gain 1000 Accuracy, Armor Penetration, Critical Strik and Combat Advantage."},
+    {itemName: "Barbarian's Delight", slots: "CE", description: "Whenever you perform a Critical Strike, you are healed for 1% of your maximum Hit Points."},
+    {itemName: "Barbarian's Revelry", slots: "CEE", description: "Whenever you perform a Critical Strike, you are healed for 1% of your maximum Hit Points."},
+    {itemName: "Berserker's Rage", slots: "BII", description: "When your action points are over 90% gain 2500 Critical Strike.  While your Action Points are below 10% full, gain 2500 Deflection."},
+    {itemName: "Berserker's Anger", slots: "BI", description: "When your action points are over 90% gain 500 Critical Strike.  While your Action Points are below 10% full, gain 500 Deflection."},
+    {itemName: "Cavalry's Warning", slots: "CBE", description: "Whenever you activate a Mount Combat Power, you gain 1000 to all of your ratings for 10 seconds."},
+    {itemName: "Champion's Return", slots: "IEE", description: "Whenever you are reduced to 50% Hit Points, you instantly recover 10% of your Stamina and are healed for 10% of your maximum Hit Points over 10 seconds. **pre m16? This effect can only occur once every 60 seconds.**"},
+    {itemName: "Champion's Struggle", slots: "IE", description: "Whenever you are reduced to 50% Hit Points, you instantly recover 5% of your Stamina and are healed for 5% of your maximum Hit Points over 10 seconds. **pre  m16? This effect can only occur once every 60 seconds.**"},
+    {itemName: "Knight's Defense", slots: "CR", description: "Whenever you receive Combat Advantage damage from an attack, you are healed for 1.5% of your Maximum Hit Points over 5 seconds."},
+    {itemName: "Knight's Rebuke *needs review*", slots: "CCR", description: "Whenever you receive Combat Advantage damage from an attack, you are healed for **1.5%++** of your Maximum Hit Points over 5 seconds."},
+    {itemName: "Gladiator's Guile", slots: "RIE", description: "When your Stamina is above 75%, you move 10% faster. When your Stamina is below 25%, gain 10% Stamina Gain."},
+    {itemName: "Magistrate's Patience", slots: "BBE", description: "Whenever you perform a Critical Strike, you gain 2500 Critical Avoice and up to 4 teamates receive 2500 Defense for 5 seconds.  This can trigger once every 10 seconds."},
+    {itemName: "Magistrate's Restraint *needs review*", slots: "BE", description: "Whenever you perform a Critical Strike, you gain 2500**+** Critical Avoice and up to 4 teamates receive 2500**+?** Defense for 5**+?** seconds.  This can trigger once every 10 seconds."},
+    {itemName: "Oppressor's Reprieve", slots: "CII", description: "Whenever you are Stunned, Knocked, or Rooted, you are healed for 5% of your maximum Hit Points over 5 seconds."},
+    {itemName: "Oppressor's Respite", slots: "CI", description: "Whenever you are Stunned, Knocked, or Rooted, you are healed for 1.5% of your maximum Hit Points over 5 seconds."},
+    {itemName: "Protector's Camaraderie", slots: "RRB", description: "Whenever your summoned Companion attacks, you gain 200 Armor Penetration and Defense for 10 seconds. This effect can stack up to 5 times."},
+    {itemName: "Protector's Friendship", slots: "RB", description: "Whenever your summoned Companion attacks, you gain 50 Armor Penetration and Defense for 10 seconds. This effect can stack up to 5 times."},
+    {itemName: "Shepherd's Devotion", slots: "RBI", description: "Whenever you use a Daily power, your teammates Defense  is increased by 1500 and their Movement Speed is  increased by 10% **for 10 seconds?**"},
+    {itemName: "Slayer's Bloodlust", slots: "CCE", description: "Whenever you kill a target, you gain 500 Critical Strike for 5 seconds."},
+    {itemName: "Slayer's Redemption", slots: "CCE", description: "**Pre Mod16** Whenever you kill a target, you are healed for 10% of your maximum Hit Points over 5 seconds."},
+    {itemName: "Survivor's Blessing", slots: "CCB", description: "Whenever you Deflect an attack, you are healed for 1% of your maximum Hit Points over 5 seconds."},
+    {itemName: "Survivor's Gift *needs review*", slots: "CB", description: "Whenever you Deflect an attack, you are healed for 1.5%**?** of your maximum Hit Points over 5 seconds."},
+    {itemName: "Vampire's Craving *pre m16, likely gone*", slots: "CCR", description: "**Pre m16** Whenever you perform a Lifesteal, you are healed for 3% of your maximum Hit Points over 4 seconds."},
+    {itemName: "Vampire's Thirst *pre m16, likely gone*", slots: "CR", description: "**Pre m16** Whenever you perform a Lifesteal, you are healed for 1.2% of your maximum Hit Points over 4 seconds."},
+    {itemName: "Victim's Preservation", slots: "CBB", description: "Whenever you take greater than 35% of your Maximum Hit Points in pre-mitigated damage from a single blow, you gain 2500 Defense,  Crticial Avoidance, Awareness and Deflect over 5 seconds. This effect can occur once every 10 seconds."},
+    {itemName: "Wanderer's Fortune", slots: "CRI", description: "You have achance after killing a foe to find a Refining Stone."},
+    {itemName: "Warlord's Encouragement", slots: "RE", description: "Your summoned Companion does 5% more damage."},
+    {itemName: "Warlord's Inspiration *needs review*", slots: "RRE", description: "Your summoned Companion does 20%**-? this figure in rainers sheet is the same as before m16, think it will be less, probably 10%** more damage."},
+];
+
+var mounts = [
+  {itemName: "Armored Axe Beak", slots: "CUU", quality:"legendary"},
+  {itemName: "Armored Bulette", slots: "CUU", quality:"legendary"},
+  {itemName: "Armored Giant Strider", slots: "IUU", quality:"legendary"},
+  {itemName: "Armored Griffon", slots: "CUU", quality:"legendary"},
+  {itemName: "Beholder Personal Tank", slots: "EUU", quality:"legendary"},
+  {itemName: "Black Ice Warhorse", slots: "BUU", quality:"legendary"},
+  {itemName: "Celestial Stag", slots: "BUU", quality:"legendary"},
+  {itemName: "Champion's Armored Bulette", slots: "CUU", quality:"legendary"},
+  {itemName: "Coastal Flail Snail", slots: "BUU", quality:"legendary"},
+  {itemName: "Commander Tyrannaosaur", slots: "BUU", quality:"legendary"},
+  {itemName: "Emperor Beetle", slots: "RUU", quality:"legendary"},
+  {itemName: "Imperial Rage Drake", slots: "RUU", quality:"legendary"},
+  {itemName: "Legendary Adolescent Deepcrow", slots: "RUU", quality:"legendary"},
+  {itemName: "Legendary Carpet of Flying", slots: "IUU", quality:"legendary"},
+  {itemName: "Legendary Hellfire Engine", slots: "CUU", quality:"legendary"},
+  {itemName: "Runeclad Manticore", slots: "BUU", quality:"legendary"},
+  {itemName: "Skeleton Steed", slots: "IUU", quality:"legendary"},
+  {itemName: "Swarm", slots: "IUU", quality:"legendary"},
+  {itemName: "Swift Golden Lion", slots: "IUU", quality:"legendary"},
+  {itemName: "Tenser's Floating Disk", slots: "EUU", quality:"legendary"},
+  {itemName: "Volcanic Flail Snail", slots: "BUU", quality:"legendary"},
+  {itemName: "War Triceratops", slots: "RUU", quality:"legendary"},
+  {itemName: "Warpainted Tyrannosaur", slots: "RUU", quality:"legendary"},
+  {itemName: "Adolescent Deep Crow", slots: "ECU", quality:"epic"},
+  {itemName: "Apparatus of Gond", slots: "REU", quality:"epic"},
+  {itemName: "Apparatus of Kwalish", slots: "EEU", quality:"epic"},
+  {itemName: "Armored Bear", slots: "CRU", quality:"epic"},
+  {itemName: "Axe Beak *Legacy*", slots: "BIU", quality:"epic"},
+  {itemName: "Black Owlbear", slots: "CCU", quality:"epic"},
+  {itemName: "Blazing Yeth Hound *rare/gone*", slots: "BIU", quality:"epic"},
+  {itemName: "Bulette", slots: "CRU", quality:"epic"},
+  {itemName: "Carpet of Flying", slots: "IUU", quality:"epic"},
+  {itemName: "Cavalry Tyrannosaur", slots: "RBU", quality:"epic"},
+  {itemName: "Dawn Unicorn", slots: "RIU", quality:"epic"},
+  {itemName: "Decaying Stag", slots: "RBU", quality:"epic"},
+  {itemName: "Dusk Unicorn", slots: "CEU", quality:"epic"},
+  {itemName: "Elite Shadow Wolf", slots: "CIU", quality:"epic"},
+  {itemName: "Embellished Apparatus of Gond", slots: "CEU", quality:"epic"},
+  {itemName: "Enchanted Broom", slots: "RIU", quality:"epic"},
+  {itemName: "Enchanted Courser", slots: "IBU", quality:"epic"},
+  {itemName: "Flail Snail *Legacy*", slots: "BBU", quality:"epic"},
+  {itemName: "Fungal Flail Snail", slots: "BBU", quality:"epic"},
+  {itemName: "Frozen Yeth Hound *rare/gone*", slots: "BEU", quality:"epic"},
+  {itemName: "Gas Spore", slots: "IEU", quality:"epic"},
+  {itemName: "Giant Beetle", slots: "RRU", quality:"epic"},
+  {itemName: "Giant Crab", slots: "RBU", quality:"epic"},
+  {itemName: "Giant Strider *Legacy*", slots: "IIU", quality:"epic"},
+  {itemName: "Gorgon", slots: "REU", quality:"epic"},
+  {itemName: "Griffon", slots: "CIU", quality:"epic"},
+  {itemName: "Guard Drake", slots: "RBU", quality:"epic"},
+  {itemName: "Heavy Giant Spider", slots: "RIU", quality:"epic"},
+  {itemName: "Heavy Howler", slots: "CBU", quality:"epic"},
+  {itemName: "Heavy Inferno Nightmare", slots: "CIU", quality:"epic"},
+  {itemName: "Heavy Mystic Nightmare", slots: "IEU", quality:"epic"},
+  {itemName: "Heavy Twilight Nightmare", slots: "CCU", quality:"epic"},
+  {itemName: "Heavy Worg", slots: "BEU", quality:"epic"},
+  {itemName: "Hellfire Engine", slots: "CBU", quality:"epic"},
+  {itemName: "High Forest Bear", slots: "CRU", quality:"epic"},
+  {itemName: "Leopard of Chult", slots: "BIU", quality:"epic"},
+  {itemName: "Lord's Armored Polar Bear", slots: "RIU", quality:"epic"},
+  {itemName: "Manticore", slots: "BEU", quality:"epic"},
+  {itemName: "Medium Adventurer's Horse", slots: "CBU", quality:"epic"},
+  {itemName: "Owlbear", slots: "CEU", quality:"epic"},
+  {itemName: "Purple Owlbear", slots: "RRU", quality:"epic"},
+  {itemName: "Rage Drake", slots: "BIU", quality:"epic"},
+  {itemName: "Royal Winter Sled", slots: "EU", quality:"epic"},
+  {itemName: "Savage Polar Bear", slots: "BBU", quality:"epic"},
+  {itemName: "Siegebreaker Griffon", slots: "CIU", quality:"epic"},
+  {itemName: "Silverback Bear", slots: "IEU", quality:"epic"},
+  {itemName: "Skeletal Worg", slots: "BBU", quality:"epic"},
+  {itemName: "Spiked Deinonychus", slots: "REU", quality:"epic"},
+  {itemName: "Starfade Stag", slots: "IEU", quality:"epic"},
+  {itemName: "Stormraider Clydesdale", slots: "REU", quality:"epic"},
+  {itemName: "Suratuk's Banded Spider", slots: "CRU", quality:"epic"},
+  {itemName: "Suratuk's Blue Tarantula", slots: "BBU", quality:"epic"},
+  {itemName: "Suratuk's Giant Red Crab", slots: "RBU", quality:"epic"},
+  {itemName: "Striped Owlbear *rare/missing*", slots: "IIU", quality:"epic"},
+  {itemName: "Sylvan Stag", slots: "BEU", quality:"epic"},
+  {itemName: "Tiger-striped Owlbear", slots: "BBU", quality:"epic"},
+  {itemName: "Toothesome", slots: "RBU", quality:"epic"},
+  {itemName: "Trained Basilisk", slots: "EEU", quality:"epic"},
+  {itemName: "Triceratops", slots: "RBU", quality:"epic"},
+  {itemName: "Turmish Lion", slots: "IBU", quality:"epic"},
+  {itemName: "Whirlwind", slots: "BBU", quality:"epic"},
+  {itemName: "White Owlbear", slots: "EEU", quality:"epic"},
+  {itemName: "White Tiger", slots: "RBU", quality:"epic"},
+  {itemName: "Yeth Hound", slots: "CBU", quality:"epic"},
+  {itemName: "Aberrant Drake", slots: "BII", quality:"rare"},
+  {itemName: "Aberrant Fey Wolf", slots: "REE", quality:"rare"},
+  {itemName: "Aberrant Yeth Hound", slots: "RCC", quality:"rare"},
+  {itemName: "Arkaiun Courser", slots: "RRB", quality:"rare"},
+  {itemName: "Armored Ghost Horse", slots: "CCB", quality:"rare"},
+  {itemName: "Black Stallion", slots: "RIE", quality:"rare"},
+  {itemName: "Buckskin Destrier", slots: "BBE", quality:"rare"},
+  {itemName: "Forest Wolf of the Wild Hunt *rare/missing*", slots: "CII", quality:"rare"},
+  {itemName: "Forest Flail Snail", slots: "BBU", quality:"rare"},
+  {itemName: "Frosted Wolf of the Wild Hunt *rare/missing*", slots: "CEE", quality:"rare"},
+  {itemName: "Frozen Demon Sled", slots: "CCR", quality:"rare"},
+  {itemName: "Frozen Winter Sled", slots: "EU", quality:"rare"},
+  {itemName: "Gelatinous Cube", slots: "RII", quality:"rare"},
+  {itemName: "Gilded Giant Spider", slots: "CRI", quality:"rare"},
+  {itemName: "Golden Brindle Horse", slots: "RRE", quality:"rare"},
+  {itemName: "Green Owlbear *?*", slots: "CEE", quality:"rare"},
+  {itemName: "Hell Emblazon Worg", slots: "IEE", quality:"rare"},
+  {itemName: "Hell Hound", slots: "CCR", quality:"rare"},
+  {itemName: "Howler", slots: "CBE", quality:"rare"},
+  {itemName: "Medium Black Horse", slots: "RRB", quality:"rare"},
+  {itemName: "Medium Palomino Horse", slots: "CBE", quality:"rare"},
+  {itemName: "Medium Pharaoh Steed", slots: "CCB", quality:"rare"},
+  {itemName: "Medium Snowswift Horse", slots: "CII", quality:"rare"},
+  {itemName: "Medium Tiger", slots: "BBE", quality:"rare"},
+  {itemName: "Medium Waterdeep Horse", slots: "BBI", quality:"rare"},
+  {itemName: "Medium Worg", slots: "RRE", quality:"rare"},
+  {itemName: "Moss-daubed Horse", slots: "RIE", quality:"rare"},
+  {itemName: "Moonbear", slots: "CBI", quality:"rare"},
+  {itemName: "Neverwinter Champion's Charger", slots: "IEE", quality:"rare"},
+  {itemName: "Panther", slots: "CCE", quality:"rare"},
+  {itemName: "Poisonous Looking Spider", slots: "BBE", quality:"rare"},
+  {itemName: "Polar Bear", slots: "CEE", quality:"rare"},
+  {itemName: "Reanimated Destrier", slots: "IEE", quality:"rare"},
+  {itemName: "Sabino Destrier", slots: "RBI", quality:"rare"},
+  {itemName: "Small Forest Stag", slots: "RBI", quality:"rare"},
+  {itemName: "Snowclad Manticore", slots: "CRE", quality:"rare"},
+  {itemName: "Suratuk's Giant Sunset Crab", slots: "RBI", quality:"rare"},
+  {itemName: "Suratuk's Jungle Spider", slots: "CRI", quality:"rare"},
+  {itemName: "Suratuk's Teal Crag Cat", slots: "CRE", quality:"rare"},
+  {itemName: "Suratuk's Teal Spider", slots: "CRI", quality:"rare"},
+  {itemName: "Trained Grizzly", slots: "RRB", quality:"rare"},
+  {itemName: "Tuigan Courser", slots: "BBI", quality:"rare"},
+  {itemName: "Water Horse", slots: "RII", quality:"rare"},
+  {itemName: "Wolf of the Wild Hunt", slots: "RIE", quality:"rare"},
+  {itemName: "Amnian Horse", slots: "IU", quality:"uncommon"},
+  {itemName: "Amphail Fancy Horse", slots: "RU", quality:"uncommon"},
+  {itemName: "Armored Boar", slots: "BU", quality:"uncommon"},
+  {itemName: "Ashen Brindle Horse", slots: "CU", quality:"uncommon"},
+  {itemName: "Autumn Stag", slots: "CU", quality:"uncommon"},
+  {itemName: "Bay Zakharan Horse", slots: "RU", quality:"uncommon"},
+  {itemName: "Black Horse", slots: "RU", quality:"uncommon"},
+  {itemName: "Blue Ribbon Pig", slots: "BU", quality:"uncommon"},
+  {itemName: "Calimshan Horse", slots: "BU", quality:"uncommon"},
+  {itemName: "Crag Cat", slots: "BU", quality:"uncommon"},
+  {itemName: "Dappled Riding Horse", slots: "IU", quality:"uncommon"},
+  {itemName: "Deinonychus", slots: "BU", quality:"uncommon"},
+  {itemName: "Demon Sled", slots: "CU", quality:"uncommon"},
+  {itemName: "Electric Tiger *rare/missing*", slots: "RI", quality:"uncommon"},
+  {itemName: "Fey Wolf", slots: "CU", quality:"uncommon"},
+  {itemName: "Frozen Polar Bear", slots: "RU", quality:"uncommon"},
+  {itemName: "Gilded White Steed *rare/missing*", slots: "RU", quality:"uncommon"},
+  {itemName: "Grey Horse *rare/missing*", slots: "RU", quality:"uncommon"},
+  {itemName: "Inferno Nightmare", slots: "IU", quality:"uncommon"},
+  {itemName: "Ice Panther *rare/missing*", slots: "BU", quality:"uncommon"},
+  {itemName: "Jubilee Parade Horse", slots: "RU", quality:"uncommon"},
+  {itemName: "Jubilee Unicorn", slots: "RU", quality:"uncommon"},
+  {itemName: "New Year's Boar", slots: "EI", quality:"uncommon"},
+  {itemName: "Onyx Horse *rare/missing*", slots: "IU", quality:"uncommon"},
+  {itemName: "Pale Horse", slots: "EU", quality:"uncommon"},
+  {itemName: "Pharaoh Steed", slots: "BU", quality:"uncommon"},
+  {itemName: "Rainbow Starry Panther", slots: "IU", quality:"uncommon"},
+  {itemName: "Shadow Wolf", slots: "CU", quality:"uncommon"},
+  {itemName: "Starry Panther", slots: "CU", quality:"uncommon"},
+  {itemName: "Stormraider Horse *rare/missing*", slots: "IU", quality:"uncommon"},
+  {itemName: "Sunite Steed", slots: "EU", quality:"uncommon"},
+  {itemName: "Tethyr Horse", slots: "EU", quality:"uncommon"},
+  {itemName: "Tribal Polar Bear", slots: "BI", quality:"uncommon"},
+  {itemName: "White Horse", slots: "IU", quality:"uncommon"},
+  {itemName: "Winter Sled", slots: "EU", quality:"uncommon"},
+  {itemName: "Winter Stag", slots: "CU", quality:"uncommon"},
+  {itemName: "Winter Wolf", slots: "BU", quality:"uncommon"},
+  {itemName: "Appaloosa Horse", slots: "CI", quality:"common"},
+  {itemName: "Boar", slots: "RI", quality:"common"},
+  {itemName: "Brindle Horse", slots: "CB", quality:"common"},
+  {itemName: "Palomino Horse", slots: "RB", quality:"common"},
+  {itemName: "Sabino Horse", slots: "RE", quality:"common"},
+  {itemName: "Waterdeep Horse", slots: "IE", quality:"common"},
+];
+
+function wordySlots(slots) {
+    "use strict";
+    var i = slots.length;
+    var count = {};
+    while (i > 0) {
+        i -= 1;
+        if (count[slots[i]]) {
+            count[slots[i]] += 1;
+        } else {
+            count[slots[i]] = 1;
+        }
+    }
+    var keys = Object.keys(count);
+    var array = [];
+    i = keys.length;
+    while (i > 0) {
+        i -= 1;
+        array.push(count[keys[i]] + " " + insignia[keys[i]]);
+    }
+    return array.join(", ");
+}
+
+function bonusMountMatch(bSlots, mSlots) {
+    "use strict";
+    if (bSlots === "") {
+        return true;
+    }
+    if (bSlots.length !== mSlots.length) {
+        return false;
+    }
+    var diff = mSlots;
+    var i = bSlots.length;
+    while (i > 0) {
+        i -= 1;
+        diff = diff.replace(bSlots[i], "");
+    }
+    return diff === "" || diff === "U" || diff === "UU";
+}
+
+function possibleBonuses(mSlots, selected) {
+    "use strict";
+    var array = [];
+    var i = 2;
+    while (i < bonuses.length) {
+        if (bonusMountMatch(bonuses[i].slots, mSlots)) {
+            if (i === selected) {
+                array.push(bonuses[i].itemName);
+            } else {
+                array.push("<a href=\"?" + i + "\" title=\"" + bonuses[i].description + "\">" + bonuses[i].itemName + "</a>");
+            }
+        }
+        i += 1;
+    }
+    return array.join(", ");
+}
+
+function update() {
+    "use strict";
+    var selected = document.getElementById("select").selectedIndex;
+    var bSlots = bonuses[selected].slots;
+    document.getElementById("slots").textContent = bonuses[selected].wordySlots;
+    document.getElementById("description").textContent = bonuses[selected].description;
+    if (selected === 0) {
+        document.getElementById("table1").removeAttribute("style");
+        document.getElementById("table2").style.display = "none";
+    } else {
+        document.getElementById("table1").style.display = "none";
+        var table = document.getElementById("table2");
+        table.removeAttribute("style");
+        while (table.rows.length > 1) {
+            table.deleteRow(-1);
+        }
+        if (bSlots.length === 2) {
+            document.getElementById("slot3").style.display = "none";
+        } else {
+            document.getElementById("slot3").removeAttribute("style");
+        }
+        var i = 0;
+        var mSlots;
+        var row;
+        var cell;
+        var link;
+        while (i < mounts.length) {
+            mSlots = mounts[i].slots;
+            if (bonusMountMatch(bSlots, mSlots)) {
+                row = table.insertRow(table.rows.length);
+                cell = row.insertCell(0);
+                link = document.createElement("a");
+                link.setAttribute("href", "http://neverwinter.gamepedia.com/" + mounts[i].itemName.replace(/\s/g, "_"));
+                link.textContent = mounts[i].itemName;
+                cell.appendChild(link);
+                cell.className = "nowrap " + mounts[i].quality;
+                cell = row.insertCell(1);
+                cell.textContent = insignia[mSlots[0]];
+                cell.className = cell.textContent;
+                cell = row.insertCell(2);
+                cell.textContent = insignia[mSlots[1]];
+                cell.className = cell.textContent;
+                cell = row.insertCell(3);
+                cell.innerHTML = possibleBonuses(mSlots, selected);
+                if (bSlots.length !== 2) {
+                    cell = row.insertCell(3);
+                    if (mSlots.length === 3) {
+                        cell.textContent = insignia[mSlots[2]];
+                        cell.className = cell.textContent;
+                    }
+                }
+            }
+            i += 1;
+        }
+    }
+    if (selected === 0) {
+        history.replaceState(null, null, location.protocol + "//" + location.host + location.pathname);
+    } else {
+        history.replaceState(null, null, "?" + selected);
+    }
+}
+
+function initialize() {
+    "use strict";
+    var i = 2;
+    var table = document.getElementById("table1");
+    var row;
+    var cell;
+    var link;
+    while (i < bonuses.length) {
+        row = table.insertRow(table.rows.length);
+        cell = row.insertCell(0);
+        link = document.createElement("a");
+        link.setAttribute("href", "?" + i);
+        link.textContent = bonuses[i].itemName;
+        cell.appendChild(link);
+        cell.className = "nowrap";
+        cell = row.insertCell(1);
+        bonuses[i].wordySlots = wordySlots(bonuses[i].slots);
+        cell.textContent = bonuses[i].wordySlots;
+        cell.className = "nowrap";
+        cell = row.insertCell(2);
+        cell.textContent = bonuses[i].description;
+        i += 1;
+    }
+    var option;
+    var select = document.getElementById("select");
+    i = 0;
+    while (i < bonuses.length) {
+        option = document.createElement("option");
+        option.text = bonuses[i].itemName;
+        option.value = i;
+        select.add(option);
+        i += 1;
+    }
+    var query = parseInt(location.search.slice(1));
+    if (query >= 0 && query < bonuses.length) {
+        select.selectedIndex = query;
+    } else {
+        select.selectedIndex = 0;
+    }
+    update();
+}
+
+initialize();
+</script>
+</body>
+</html>
